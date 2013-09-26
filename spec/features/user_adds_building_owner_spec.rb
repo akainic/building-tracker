@@ -21,11 +21,21 @@ feature 'user adds building owner', %Q{
 
     fill_in 'First name', with: 'Dan'
     fill_in 'Last name', with: 'Pickett'
-    fill_in 'Email', with 'dan.pickett@missioncontrol.com'
+    fill_in 'Email', with: 'dan.pickett@missioncontrol.com'
     click_button 'Enter Owner'
-
+    
     expect(page).to have_content('You have successfully recorded this owner.')
     expect(Owner.count).to eql(prev_count + 1)
+  end
+
+  scenario 'user does not enter valid criteria to create a new owner record' do
+    prev_count = Owner.count 
+    visit '/owners/new'
+
+    click_button 'Enter Owner'
+
+    expect(page).to have_content("can't be blank")
+    expect(Owner.count).to eql(prev_count)
   end
 
 end

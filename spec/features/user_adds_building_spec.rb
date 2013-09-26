@@ -17,9 +17,14 @@ feature 'user adds a building', %Q{
   #   the building is not recorded and I am presented with errors
   # * Upon successfully creating a building, I am redirected so that I can 
   #   record another building
+  # * When recording a building, I want to optionally associate the building
+  #   with its rightful owner.
+  # * If I delete an owner, the owner and its primary key should no longer be
+  #   associated with any properties.
 
   scenario 'user enters valid criteria to create a building record' do
     FactoryGirl.create(:state, state: 'Massachusetts')
+    FactoryGirl.create(:owner)
 
     prev_count = Building.count 
     visit '/buildings/new'
@@ -28,6 +33,7 @@ feature 'user adds a building', %Q{
     select 'Massachusetts', from: 'State'
     fill_in 'Postal code', with: '02111'
     fill_in 'Description', with: 'awesome place to be'
+    select 'Dan Pickett', from: 'Owner'
     click_button 'Enter Building'
 
     expect(page).to have_content('You have successfully recorded this building.')
@@ -39,8 +45,30 @@ feature 'user adds a building', %Q{
     visit '/buildings/new'
 
     click_button 'Enter Building'
+
     expect(page).to have_content("can't be blank")
     expect(Building.count).to eql(prev_count)
   end
+
+  scenario 'owner is deleted' do 
+    FactoryGirl.create(:state, state: 'Massachusetts')
+    owner = FactoryGirl.create(:owner)
+
+    prev_count = Building.count 
+    visit '/buildings/new'
+    fill_in 'Street address', with: '33 Harrison Ave'
+    fill_in 'City', with: 'Boston'
+    select 'Massachusetts', from: 'State'
+    fill_in 'Postal code', with: '02111'
+    fill_in 'Description', with: 'awesome place to be'
+    select 'Dan Pickett', from: 'Owner'
+    click_button 'Enter Building'
+
+    expect(page).to have_content('You have successfully recorded this building.')
+    expect(Building.count).to eql(prev_count + 1)
+
+    owner = 'other'
+    expect(Building.count).to eql(prev_count + 1)
+  end  
 
 end
